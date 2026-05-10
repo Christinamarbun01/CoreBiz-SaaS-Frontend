@@ -1,23 +1,24 @@
 import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 // Membuat instance axios dengan konfigurasi dasar
 const api = axios.create({
   // Mengambil URL dari environment variable (.env)
-  // Vite menggunakan prefix VITE_ agar bisa dibaca di client-side
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
   timeout: 10000, // Timeout request setelah 10 detik
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Anda dapat menambahkan interceptor di sini (misalnya untuk menyisipkan token otomatis)
+// Menambahkan interceptor untuk menyisipkan token otomatis dari Supabase
 api.interceptors.request.use(
-  (config) => {
-    // Contoh: Ambil token dari localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    // Ambil session dari Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
     }
     return config;
   },
@@ -30,11 +31,12 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    // Anda bisa menangani error secara global di sini, misal auto logout jika status 401
+  async (error) => {
+    // Auto logout jika status 401
     if (error.response?.status === 401) {
       console.error('Sesi Anda telah berakhir, silakan login kembali.');
-      // Contoh: window.location.href = '/login';
+      await supabase.auth.signOut();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
