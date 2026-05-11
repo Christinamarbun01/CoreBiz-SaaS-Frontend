@@ -33,7 +33,7 @@ export function ExpenseFormModal({ open, onOpenChange }: ExpenseFormModalProps) 
   const { activeShift } = useShiftStore();
 
   const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseSchema),
+    resolver: zodResolver(expenseSchema) as any,
     defaultValues: {
       category: '',
       description: '',
@@ -41,7 +41,7 @@ export function ExpenseFormModal({ open, onOpenChange }: ExpenseFormModalProps) 
     },
   });
 
-  const onSubmit = async (data: ExpenseFormValues) => {
+  const onSubmit = async (data: any) => {
     if (!activeShift) {
       toast.error('Tidak bisa mencatat pengeluaran. Anda harus membuka kasir (Shift) terlebih dahulu.');
       return;

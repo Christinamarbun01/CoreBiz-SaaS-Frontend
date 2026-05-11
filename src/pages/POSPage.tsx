@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, CreditCard, User, Package } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { MOCK_PRODUCTS } from '@/data/posMockData';
 import { useCartStore } from '@/store/cartStore';
@@ -21,39 +20,7 @@ function formatRupiah(amount: number): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PaymentMethodSelector({
-  value,
-  onChange,
-}: {
-  value: 'cash' | 'qris' | 'transfer';
-  onChange: (v: 'cash' | 'qris' | 'transfer') => void;
-}) {
-  const methods = [
-    { value: 'cash', label: 'Tunai', icon: '💵' },
-    { value: 'qris', label: 'QRIS', icon: '📱' },
-    { value: 'transfer', label: 'Transfer', icon: '🏦' },
-  ] as const;
 
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      {methods.map((m) => (
-        <button
-          key={m.value}
-          onClick={() => onChange(m.value)}
-          className={cn(
-            'flex flex-col items-center justify-center gap-1 rounded-lg border-2 p-2 text-xs font-medium transition-all',
-            value === m.value
-              ? 'border-slate-800 bg-slate-800 text-white'
-              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-400',
-          )}
-        >
-          <span className="text-lg">{m.icon}</span>
-          {m.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -129,7 +96,7 @@ export default function POSPage() {
       method: 'cash', // Default placeholder
       customer_id: customerId ?? undefined,
       notes: undefined,
-      items: items.map((i) => ({
+      items: items.map((i: any) => ({
         product_id: i.product.id,
         quantity: i.quantity,
       })),
@@ -230,8 +197,8 @@ export default function POSPage() {
                     {category}
                   </h2>
                   <div className="grid grid-cols-3 gap-3 xl:grid-cols-4">
-                    {products.map((product) => {
-                      const cartItem = items.find((i) => i.product.id === product.id);
+                    {products.map((product: any) => {
+                      const cartItem = items.find((i: any) => i.product.id === product.id);
                       const inCart = !!cartItem;
 
                       return (
@@ -308,7 +275,7 @@ export default function POSPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {items.map((item) => (
+                {items.map((item: any) => (
                   <div
                     key={item.product.id}
                     className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"

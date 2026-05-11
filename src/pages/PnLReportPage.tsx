@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { Loader2, TrendingUp, TrendingDown, DollarSign, PackageMinus, Receipt, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, PackageMinus, Receipt, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -184,11 +184,11 @@ export default function PnLReportPage() {
                         tick={{ fontSize: 12, fill: '#64748b' }} 
                         axisLine={false} 
                         tickLine={false} 
-                        tickFormatter={(value) => `Rp${(value / 1000).toFixed(0)}k`}
+                        tickFormatter={(value: any) => `Rp${(value / 1000).toFixed(0)}k`}
                       />
                       <Tooltip 
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: number) => formatIDR(value)}
+                        formatter={(value: any) => formatIDR(value)}
                         labelStyle={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}
                       />
                       <Area 

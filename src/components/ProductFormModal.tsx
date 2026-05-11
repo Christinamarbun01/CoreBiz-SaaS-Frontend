@@ -59,8 +59,8 @@ interface ProductFormModalProps {
 export function ProductFormModal({ open, onOpenChange, product, onSuccess, token }: ProductFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, watch, reset, setValue, formState: { errors } } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema) as any,
     defaultValues: {
       name: '',
       sku: '',
@@ -103,7 +103,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
     }
   }, [open, product, reset]);
 
-  const onSubmit = async (data: ProductFormValues) => {
+  const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
