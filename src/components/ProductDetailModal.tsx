@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '@/config';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Plus, Package, FlaskConical, Loader2, Search } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ export function ProductDetailModal({ open, onOpenChange, product, token }: Produ
     if (!product) return;
     setLoadingRecipes(true);
     try {
-      const res = await fetch(`${API_URL}/api/v1/products/${product.id}/recipes`, {
+      const res = await fetch(`${API_URL}/products/${product.id}/recipes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -118,7 +119,7 @@ export function ProductDetailModal({ open, onOpenChange, product, token }: Produ
 
   const fetchAllProducts = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/v1/products`, {
+      const res = await fetch(`${API_URL}/products`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -149,7 +150,7 @@ export function ProductDetailModal({ open, onOpenChange, product, token }: Produ
 
     setIsAdding(true);
     try {
-      const res = await fetch(`${API_URL}/api/v1/products/${product.id}/recipes`, {
+      const res = await fetch(`${API_URL}/products/${product.id}/recipes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +183,7 @@ export function ProductDetailModal({ open, onOpenChange, product, token }: Produ
     if (!confirm(`Hapus "${ingredientName}" dari resep?`)) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/v1/products/${product.id}/recipes/${recipeId}`, {
+      const res = await fetch(`${API_URL}/products/${product.id}/recipes/${recipeId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

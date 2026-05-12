@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { API_URL } from '@/config';
 import { Search, Eye, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,8 +43,8 @@ export default function CustomersPage() {
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const url = new URL(`${API_URL}/api/v1/customers`);
+
+      const url = new URL(`${API_URL}/customers`);
       if (debouncedSearch) {
         url.searchParams.append('search', debouncedSearch);
       }
@@ -72,8 +73,8 @@ export default function CustomersPage() {
     if (!confirm(`Yakin ingin menghapus pelanggan ${name}?`)) return;
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_URL}/api/v1/customers/${id}`, {
+
+      const res = await fetch(`${API_URL}/customers/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${HARDCODED_TOKEN}` },
       });

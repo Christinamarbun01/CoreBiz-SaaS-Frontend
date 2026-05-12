@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '@/config';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,8 +99,8 @@ export function StockAdjustModal({
 
     setIsSubmitting(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_URL}/api/v1/inventory/adjust`, {
+
+      const res = await fetch(`${API_URL}/inventory/adjust`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

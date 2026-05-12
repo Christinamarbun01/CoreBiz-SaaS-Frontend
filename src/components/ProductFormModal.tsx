@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '@/config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -59,8 +60,8 @@ interface ProductFormModalProps {
 export function ProductFormModal({ open, onOpenChange, product, onSuccess, token }: ProductFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, watch, reset, setValue, formState: { errors } } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema as any),
     defaultValues: {
       name: '',
       sku: '',
@@ -73,12 +74,12 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
     }
   });
 
-  const isStockTracked = watch('is_stock_tracked');
+  const isStockTracked = form.watch('is_stock_tracked');
 
   useEffect(() => {
     if (open) {
       if (product) {
-        reset({
+        form.reset({
           name: product.name,
           sku: product.sku || '',
           price: product.price,
@@ -89,7 +90,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
           min_stock_alert: product.min_stock_alert,
         });
       } else {
-        reset({
+        form.reset({
           name: '',
           sku: '',
           price: 0,
@@ -101,13 +102,13 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
         });
       }
     }
-  }, [open, product, reset]);
+  }, [open, product, form]);
 
   const onSubmit = async (data: ProductFormValues) => {
     setIsSubmitting(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const endpoint = product ? `/api/v1/products/${product.id}` : '/api/v1/products';
+
+      const endpoint = product ? `/products/${product.id}` : '/products';
       const method = product ? 'PUT' : 'POST';
 
       // Transform empty strings to null for optional fields
@@ -157,47 +158,47 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
           <DialogTitle>{product ? 'Edit Produk' : 'Tambah Produk Baru'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-700">Nama Produk <span className="text-red-500">*</span></label>
-              <Input {...register('name')} placeholder="Nasi Goreng Spesial" className={errors.name ? 'border-red-500' : ''} />
-              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+              <Input {...form.register('name')} placeholder="Nasi Goreng Spesial" className={form.formState.errors.name ? 'border-red-500' : ''} />
+              {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-700">SKU / Barcode (Opsional)</label>
-              <Input {...register('sku')} placeholder="NG-001" className={errors.sku ? 'border-red-500' : ''} />
-              {errors.sku && <p className="text-xs text-red-500">{errors.sku.message}</p>}
+              <Input {...form.register('sku')} placeholder="NG-001" className={form.formState.errors.sku ? 'border-red-500' : ''} />
+              {form.formState.errors.sku && <p className="text-xs text-red-500">{form.formState.errors.sku.message}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-700">Harga Jual (Price) <span className="text-red-500">*</span></label>
-              <Input type="number" {...register('price')} className={errors.price ? 'border-red-500' : ''} />
-              {errors.price && <p className="text-xs text-red-500">{errors.price.message}</p>}
+              <Input type="number" {...form.register('price')} className={form.formState.errors.price ? 'border-red-500' : ''} />
+              {form.formState.errors.price && <p className="text-xs text-red-500">{form.formState.errors.price.message}</p>}
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-700">Harga Modal (HPP) <span className="text-red-500">*</span></label>
-              <Input type="number" {...register('cost')} className={errors.cost ? 'border-red-500' : ''} />
-              {errors.cost && <p className="text-xs text-red-500">{errors.cost.message}</p>}
+              <Input type="number" {...form.register('cost')} className={form.formState.errors.cost ? 'border-red-500' : ''} />
+              {form.formState.errors.cost && <p className="text-xs text-red-500">{form.formState.errors.cost.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-700">Tipe Produk <span className="text-red-500">*</span></label>
             <select
-              {...register('type')}
-              className={`flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 ${errors.type ? 'border-red-500' : ''}`}
+              {...form.register('type')}
+              className={`flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 ${form.formState.errors.type ? 'border-red-500' : ''}`}
             >
               <option value="sellable">Barang Jadi / Jasa (Sellable)</option>
               <option value="component">Bahan Baku (Component)</option>
               <option value="both">Keduanya (Bisa dijual & jadi bahan baku)</option>
             </select>
-            {errors.type && <p className="text-xs text-red-500">{errors.type.message}</p>}
+            {form.formState.errors.type && <p className="text-xs text-red-500">{form.formState.errors.type.message}</p>}
           </div>
 
           <div className="p-4 border border-slate-200 rounded-lg bg-slate-50">
@@ -207,7 +208,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
                   <input
                     type="checkbox"
                     className="sr-only"
-                    {...register('is_stock_tracked')}
+                    {...form.register('is_stock_tracked')}
                   />
                   <div className={`block w-10 h-6 rounded-full transition-colors ${isStockTracked ? 'bg-blue-600' : 'bg-slate-300'}`}></div>
                   <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isStockTracked ? 'transform translate-x-4' : ''}`}></div>
@@ -225,13 +226,13 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
               <div className="grid grid-cols-2 gap-4 mt-2 ml-12 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-700">Stok Saat Ini <span className="text-red-500">*</span></label>
-                  <Input type="number" {...register('current_stock')} className={errors.current_stock ? 'border-red-500' : ''} />
-                  {errors.current_stock && <p className="text-xs text-red-500">{errors.current_stock.message}</p>}
+                  <Input type="number" {...form.register('current_stock')} className={form.formState.errors.current_stock ? 'border-red-500' : ''} />
+                  {form.formState.errors.current_stock && <p className="text-xs text-red-500">{form.formState.errors.current_stock.message}</p>}
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-700">Batas Alert Minimum <span className="text-red-500">*</span></label>
-                  <Input type="number" {...register('min_stock_alert')} className={errors.min_stock_alert ? 'border-red-500' : ''} />
-                  {errors.min_stock_alert && <p className="text-xs text-red-500">{errors.min_stock_alert.message}</p>}
+                  <Input type="number" {...form.register('min_stock_alert')} className={form.formState.errors.min_stock_alert ? 'border-red-500' : ''} />
+                  {form.formState.errors.min_stock_alert && <p className="text-xs text-red-500">{form.formState.errors.min_stock_alert.message}</p>}
                 </div>
               </div>
             )}

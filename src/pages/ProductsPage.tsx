@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { API_URL } from '@/config';
 import { PackageSearch, Plus, Search, Edit, Trash2, MoreVertical, PackagePlus, ClipboardList, Eye, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -127,8 +128,8 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_URL}/api/v1/products`, {
+
+      const res = await fetch(`${API_URL}/products`, {
         headers: { Authorization: `Bearer ${HARDCODED_TOKEN}` },
       });
       const data = await res.json();
@@ -162,8 +163,8 @@ export default function ProductsPage() {
     if (!confirm(`Yakin ingin menghapus produk "${name}"? Data tidak akan benar-benar terhapus (Soft Delete).`)) return;
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_URL}/api/v1/products/${id}`, {
+
+      const res = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${HARDCODED_TOKEN}` },
       });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '@/config';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,10 +67,10 @@ export function CheckoutModal({
     
     setIsSubmitting(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
       const token = 'HARDCODED_STATIC_TOKEN_FOR_TESTING';
 
-      const res = await fetch(`${API_URL}/api/v1/orders/${orderId}/pay`, {
+      const res = await fetch(`${API_URL}/orders/${orderId}/pay`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

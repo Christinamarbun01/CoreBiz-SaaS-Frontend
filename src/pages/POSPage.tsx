@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '@/config';
 import { ShoppingCart, Plus, Minus, Trash2, CreditCard, User, Package } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { MOCK_PRODUCTS } from '@/data/posMockData';
 import { useCartStore } from '@/store/cartStore';
 import { cn } from '@/lib/utils';
 import { CheckoutModal } from '@/components/CheckoutModal';
@@ -19,41 +17,7 @@ function formatRupiah(amount: number): string {
   }).format(amount);
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PaymentMethodSelector({
-  value,
-  onChange,
-}: {
-  value: 'cash' | 'qris' | 'transfer';
-  onChange: (v: 'cash' | 'qris' | 'transfer') => void;
-}) {
-  const methods = [
-    { value: 'cash', label: 'Tunai', icon: '💵' },
-    { value: 'qris', label: 'QRIS', icon: '📱' },
-    { value: 'transfer', label: 'Transfer', icon: '🏦' },
-  ] as const;
-
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      {methods.map((m) => (
-        <button
-          key={m.value}
-          onClick={() => onChange(m.value)}
-          className={cn(
-            'flex flex-col items-center justify-center gap-1 rounded-lg border-2 p-2 text-xs font-medium transition-all',
-            value === m.value
-              ? 'border-slate-800 bg-slate-800 text-white'
-              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-400',
-          )}
-        >
-          <span className="text-lg">{m.icon}</span>
-          {m.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -94,8 +58,8 @@ export default function POSPage() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const url = new URL(`${API_URL}/api/v1/customers`);
+
+        const url = new URL(`${API_URL}/customers`);
         if (debouncedCustomerSearch) {
           url.searchParams.append('search', debouncedCustomerSearch);
         }
@@ -109,8 +73,32 @@ export default function POSPage() {
     fetchCustomers();
   }, [debouncedCustomerSearch]);
 
-  const categories = [...new Set(MOCK_PRODUCTS.map((p) => p.category))];
-  const filteredProducts = MOCK_PRODUCTS.filter((p) =>
+  const [posProducts, setPosProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_URL}/products?type=sellable`, {
+          headers: { Authorization: 'Bearer HARDCODED_STATIC_TOKEN_FOR_TESTING' }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const mapped = (data.data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            category: p.categories?.name || 'Produk',
+            emoji: '📦',
+          }));
+          setPosProducts(mapped);
+        }
+      } catch (err) {}
+    };
+    fetchProducts();
+  }, []);
+
+  const categories = [...new Set(posProducts.map((p) => p.category))];
+  const filteredProducts = posProducts.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -127,7 +115,7 @@ export default function POSPage() {
       status: 'draft',
       payment_status: 'unpaid' as const,
       method: 'cash', // Default placeholder
-      customer_id: customerId ?? undefined,
+      customer_id: customerId || undefined,
       notes: undefined,
       items: items.map((i) => ({
         product_id: i.product.id,
@@ -136,11 +124,11 @@ export default function POSPage() {
     };
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
       const token = 'HARDCODED_STATIC_TOKEN_FOR_TESTING';
 
       // 1. Create order
-      const createRes = await fetch(`${API_URL}/api/v1/orders`, {
+      const createRes = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

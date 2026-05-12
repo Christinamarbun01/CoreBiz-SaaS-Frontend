@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const TOKEN = 'HARDCODED_STATIC_TOKEN_FOR_TESTING';
+import { API_URL, HARDCODED_TOKEN as TOKEN } from '@/config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +47,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
   fetchActiveShift: async () => {
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/api/v1/shifts/active`, {
+      const res = await fetch(`${API_URL}/shifts/active`, {
         headers: { Authorization: `Bearer ${TOKEN}` },
       });
       const json = await res.json();
@@ -65,7 +64,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
   openShift: async (openingBalance: number) => {
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/api/v1/shifts`, {
+      const res = await fetch(`${API_URL}/shifts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +88,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
 
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/api/v1/shifts/${shift.id}/close`, {
+      const res = await fetch(`${API_URL}/shifts/${shift.id}/close`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

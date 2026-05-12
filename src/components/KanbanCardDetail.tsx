@@ -5,20 +5,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
+
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { API_URL } from '@/config';
 import { CheckoutModal } from '@/components/CheckoutModal';
 import {
   MessageSquareText,
@@ -248,8 +238,8 @@ export default function KanbanCardDetail({
         items: linkedItems.map((item) => ({ product_id: item.product_id, quantity: item.quantity }))
       };
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_URL}/api/v1/orders/${order.id}/link-items`, {
+
+      const response = await fetch(`${API_URL}/orders/${order.id}/link-items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

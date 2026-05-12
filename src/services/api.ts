@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 // Membuat instance axios dengan konfigurasi dasar
 const api = axios.create({
   // Mengambil URL dari environment variable (.env)
   // Vite menggunakan prefix VITE_ agar bisa dibaca di client-side
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: API_URL,
   timeout: 10000, // Timeout request setelah 10 detik
   headers: {
     'Content-Type': 'application/json',

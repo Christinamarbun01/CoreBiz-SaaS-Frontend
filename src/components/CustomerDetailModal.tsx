@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '@/config';
 import {
   Dialog,
   DialogContent,
@@ -46,8 +47,8 @@ export function CustomerDetailModal({ customerId, open, onOpenChange, token }: C
   const fetchCustomerDetail = async () => {
     setLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_URL}/api/v1/customers/${customerId}`, {
+
+      const res = await fetch(`${API_URL}/customers/${customerId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

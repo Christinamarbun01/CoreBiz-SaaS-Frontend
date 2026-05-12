@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '@/config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,7 +34,7 @@ export function ExpenseFormModal({ open, onOpenChange }: ExpenseFormModalProps) 
   const { activeShift } = useShiftStore();
 
   const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseSchema),
+    resolver: zodResolver(expenseSchema as any),
     defaultValues: {
       category: '',
       description: '',
@@ -49,10 +50,10 @@ export function ExpenseFormModal({ open, onOpenChange }: ExpenseFormModalProps) 
 
     setIsSubmitting(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
       const token = 'HARDCODED_STATIC_TOKEN_FOR_TESTING';
 
-      const res = await fetch(`${API_URL}/api/v1/expenses`, {
+      const res = await fetch(`${API_URL}/expenses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 import {
   AreaChart,
@@ -9,7 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { Loader2, TrendingUp, TrendingDown, DollarSign, PackageMinus, Receipt, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, PackageMinus, Receipt, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,10 +35,10 @@ export default function PnLReportPage() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['pnl-report', startDate, endDate],
     queryFn: async () => {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
       const token = 'HARDCODED_STATIC_TOKEN_FOR_TESTING';
 
-      const res = await fetch(`${API_URL}/api/v1/reports/pnl?start_date=${startDate}&end_date=${endDate}`, {
+      const res = await fetch(`${API_URL}/reports/pnl?start_date=${startDate}&end_date=${endDate}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -188,7 +189,7 @@ export default function PnLReportPage() {
                       />
                       <Tooltip 
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: number) => formatIDR(value)}
+                        formatter={(value: any) => formatIDR(Number(value))}
                         labelStyle={{ fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}
                       />
                       <Area 
