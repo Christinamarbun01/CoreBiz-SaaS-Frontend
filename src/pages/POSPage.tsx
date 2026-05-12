@@ -117,7 +117,7 @@ export default function POSPage() {
       method: 'cash', // Default placeholder
       customer_id: customerId || undefined,
       notes: undefined,
-      items: items.map((i) => ({
+      items: items.map((i: any) => ({
         product_id: i.product.id,
         quantity: i.quantity,
       })),
@@ -218,8 +218,8 @@ export default function POSPage() {
                     {category}
                   </h2>
                   <div className="grid grid-cols-3 gap-3 xl:grid-cols-4">
-                    {products.map((product) => {
-                      const cartItem = items.find((i) => i.product.id === product.id);
+                    {products.map((product: any) => {
+                      const cartItem = items.find((i: any) => i.product.id === product.id);
                       const inCart = !!cartItem;
 
                       return (
@@ -296,7 +296,7 @@ export default function POSPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {items.map((item) => (
+                {items.map((item: any) => (
                   <div
                     key={item.product.id}
                     className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"

@@ -104,7 +104,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess, token
     }
   }, [open, product, form]);
 
-  const onSubmit = async (data: ProductFormValues) => {
+  const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
 
