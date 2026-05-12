@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import POSPage from '@/pages/POSPage';
 import CustomersPage from '@/pages/CustomersPage';
 import ProductsPage from '@/pages/ProductsPage';
@@ -11,8 +12,11 @@ import { ShiftBlocker, CloseShiftModal } from '@/components/ShiftManager';
 import { ExpenseFormModal } from '@/components/ExpenseFormModal';
 import { useShiftStore } from '@/store/shiftStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { useDashboard } from '@/hooks/useDashboard';
 import { Button } from '@/components/ui/button';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +37,11 @@ import {
   Wallet,
   LineChart,
   LayoutDashboard,
+  BarChart3,
+  Box,
+  DollarSign,
+  TrendingDown,
+  LogOut,
 } from 'lucide-react';
 
 // Demo order — simulasikan data dari Supabase / WhatsApp
@@ -62,11 +71,130 @@ const DEMO_ORDER: KanbanOrder = {
   },
 };
 
-type TabKey = 'pos' | 'orders' | 'crm' | 'inventory' | 'finance';
+type TabKey = 'dashboard' | 'pos' | 'orders' | 'crm' | 'inventory' | 'finance';
 
+// ─── Dashboard Tab Content (embedded from Dashboard.tsx) ─────────────────────
+function DashboardTab() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('view') || 'overview';
+  const period = searchParams.get('period') || '7d';
+
+  const setView = (view: string) => setSearchParams({ tab: 'dashboard', view, period });
+  const setPeriod = (newPeriod: string) => setSearchParams({ tab: 'dashboard', view: currentTab, period: newPeriod });
+
+  const { data, isLoading, isError, error } = useDashboard(period);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(`Gagal memuat data dashboard: ${error?.message}`);
+    }
+  }, [isError, error]);
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h1>
+            <p className="text-gray-500 dark:text-gray-400">Ringkasan Laporan Laba Rugi bisnis Anda.</p>
+          </div>
+
+          {/* Filter Periode */}
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            {[
+              { id: '7d', label: '7 Hari' },
+              { id: '30d', label: '30 Hari' },
+              { id: '90d', label: '3 Bulan' },
+            ].map(p => (
+              <button
+                key={p.id}
+                onClick={() => setPeriod(p.id)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  period === p.id
+                    ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex space-x-2 mb-8 bg-gray-200/50 dark:bg-gray-800/50 p-1.5 rounded-2xl w-fit">
+          <button
+            onClick={() => setView('overview')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${currentTab === 'overview' ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'}`}
+          >
+            <BarChart3 className="w-4 h-4" /> Laba Rugi
+          </button>
+          <button
+            onClick={() => setView('users')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${currentTab === 'users' ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'}`}
+          >
+            <Users className="w-4 h-4" /> Pengguna
+          </button>
+          <button
+            onClick={() => setView('inventory')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${currentTab === 'inventory' ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'}`}
+          >
+            <Box className="w-4 h-4" /> Inventaris
+          </button>
+        </div>
+
+        {currentTab === 'overview' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <StatCard
+                title="Pendapatan (Revenue)"
+                value={data?.revenue || 0}
+                trend={data?.revenueTrend || 0}
+                icon={<DollarSign className="w-5 h-5" />}
+                isLoading={isLoading}
+              />
+              <StatCard
+                title="Harga Pokok Penjualan (COGS)"
+                value={data?.cogs || 0}
+                trend={data?.cogsTrend || 0}
+                icon={<TrendingDown className="w-5 h-5" />}
+                isLoading={isLoading}
+              />
+              <StatCard
+                title="Laba Bersih (Net Profit)"
+                value={data?.netProfit || 0}
+                trend={data?.netProfitTrend || 0}
+                icon={<Wallet className="w-5 h-5" />}
+                isLoading={isLoading}
+              />
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Grafik Pendapatan</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Tren pendapatan harian selama periode terpilih.</p>
+              </div>
+              <RevenueChart data={data?.chartData || []} isLoading={isLoading} />
+            </div>
+          </div>
+        )}
+
+        {currentTab !== 'overview' && (
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+            <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Modul Sedang Dikembangkan</h2>
+            <p className="text-gray-500 dark:text-gray-400">Modul ini akan tersedia pada fase implementasi berikutnya.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── AppShell ─────────────────────────────────────────────────────────────────
 export default function AppShell() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = (searchParams.get('tab') as TabKey) || 'pos';
+  const activeTab = (searchParams.get('tab') as TabKey) || 'dashboard';
   const setActiveTab = (tab: TabKey) => setSearchParams({ tab });
 
   const [detailOpen, setDetailOpen] = useState(false);
@@ -75,6 +203,7 @@ export default function AppShell() {
 
   const { activeShift, loading, initialized, fetchActiveShift } = useShiftStore();
   const { user } = useAuthStore();
+  const { logout, isLoggingOut } = useAuth();
 
   useEffect(() => {
     fetchActiveShift();
@@ -93,9 +222,14 @@ export default function AppShell() {
     );
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
+  const navItems: { key: TabKey; icon: React.ReactNode; title: string; activeColor: string }[] = [
+    { key: 'dashboard', icon: <LayoutDashboard size={22} />, title: 'Dashboard', activeColor: 'bg-indigo-50 text-indigo-600' },
+    { key: 'pos', icon: <Store size={22} />, title: 'Kasir POS', activeColor: 'bg-slate-100 text-slate-900' },
+    { key: 'orders', icon: <BarChart3 size={22} />, title: 'Manajemen Order', activeColor: 'bg-indigo-50 text-indigo-600' },
+    { key: 'crm', icon: <Users size={22} />, title: 'Direktori CRM', activeColor: 'bg-blue-50 text-blue-600' },
+    { key: 'inventory', icon: <PackageSearch size={22} />, title: 'Katalog Produk', activeColor: 'bg-indigo-50 text-indigo-600' },
+    { key: 'finance', icon: <LineChart size={22} />, title: 'Laporan Keuangan (P&L)', activeColor: 'bg-indigo-50 text-indigo-600' },
+  ];
 
   return (
     <div className="relative flex h-screen overflow-hidden">
@@ -104,51 +238,18 @@ export default function AppShell() {
         <div>
           <div className="mb-8 font-bold text-slate-800 text-xl text-center">CB</div>
           <div className="flex flex-col gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setActiveTab('pos')}
-              className={`rounded-xl h-12 w-12 ${activeTab === 'pos' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-              title="Kasir POS"
-            >
-              <Store size={22} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setActiveTab('orders')}
-              className={`rounded-xl h-12 w-12 ${activeTab === 'orders' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-              title="Manajemen Order"
-            >
-              <LayoutDashboard size={22} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setActiveTab('crm')}
-              className={`rounded-xl h-12 w-12 ${activeTab === 'crm' ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
-              title="Direktori CRM"
-            >
-              <Users size={22} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setActiveTab('inventory')}
-              className={`rounded-xl h-12 w-12 ${activeTab === 'inventory' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-              title="Katalog Produk"
-            >
-              <PackageSearch size={22} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setActiveTab('finance')}
-              className={`rounded-xl h-12 w-12 ${activeTab === 'finance' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-              title="Laporan Keuangan (P&L)"
-            >
-              <LineChart size={22} />
-            </Button>
+            {navItems.map(({ key, icon, title, activeColor }) => (
+              <Button
+                key={key}
+                variant="ghost"
+                size="icon"
+                onClick={() => setActiveTab(key)}
+                className={`rounded-xl h-12 w-12 ${activeTab === key ? activeColor : 'text-slate-400 hover:text-slate-600'}`}
+                title={title}
+              >
+                {icon}
+              </Button>
+            ))}
           </div>
         </div>
 
@@ -211,8 +312,10 @@ export default function AppShell() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-red-600 focus:bg-red-50 focus:text-red-700"
-                onClick={handleLogout}
+                onClick={() => logout()}
+                disabled={isLoggingOut}
               >
+                <LogOut size={14} />
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -245,20 +348,16 @@ export default function AppShell() {
           </div>
         )}
 
-        {/* Shift Gatekeeper: hanya berlaku untuk tab POS */}
-        {needsShift ? (
-          <ShiftBlocker />
-        ) : (
-          <>
-            {activeTab === 'pos' && <POSPage />}
-          </>
-        )}
+        {/* ─── Page Content ─── */}
+        {activeTab === 'dashboard' && <DashboardTab />}
 
-        {/* CRM, Inventory & Finance — tidak di-block oleh shift */}
+        {/* Shift Gatekeeper: hanya berlaku untuk tab POS */}
+        {activeTab === 'pos' && (needsShift ? <ShiftBlocker /> : <POSPage />)}
+
+        {activeTab === 'orders' && <OrdersPage />}
         {activeTab === 'crm' && <CustomersPage />}
         {activeTab === 'inventory' && <ProductsPage />}
         {activeTab === 'finance' && <PnLReportPage />}
-        {activeTab === 'orders' && <OrdersPage />}
 
         {/* Dialog detail order */}
         <KanbanCardDetail
