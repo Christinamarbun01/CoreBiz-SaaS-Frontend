@@ -1,22 +1,21 @@
 import axios from 'axios';
 import { supabase } from '../lib/supabase';
+import { API_URL } from '@/config';
+import type { KanbanOrder, OrderStatus } from '@/types/order';
 
 // Membuat instance axios dengan konfigurasi dasar
 const api = axios.create({
-  // Mengambil URL dari environment variable (.env)
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
-  timeout: 10000, // Timeout request setelah 10 detik
+  baseURL: API_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Menambahkan interceptor untuk menyisipkan token otomatis dari Supabase
+// Request interceptor: attach Supabase session token automatically
 api.interceptors.request.use(
   async (config) => {
-    // Ambil session dari Supabase
     const { data: { session } } = await supabase.auth.getSession();
-    
     if (session?.access_token) {
       config.headers.Authorization = `Bearer ${session.access_token}`;
     }
@@ -27,12 +26,12 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor: handle 401 by signing out
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   async (error) => {
-    // Auto logout jika status 401
     if (error.response?.status === 401) {
       console.error('Sesi Anda telah berakhir, silakan login kembali.');
       await supabase.auth.signOut();
@@ -41,5 +40,16 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Orders API
+export const getOrders = async (): Promise<KanbanOrder[]> => {
+  const { data } = await api.get('/orders');
+  return data;
+};
+
+export const updateOrderStatus = async (id: string, status: OrderStatus): Promise<KanbanOrder> => {
+  const { data } = await api.patch(`/orders/${id}/status`, { status });
+  return data;
+};
 
 export default api;

@@ -1,7 +1,8 @@
+import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,8 +16,8 @@ export default defineConfig({
         name: 'CoreBiz SaaS',
         short_name: 'CoreBiz',
         description: 'CoreBiz Point of Sale and Inventory Management System',
-        theme_color: '#4f46e5', // Indigo-600
-        background_color: '#111827', // Gray-900
+        theme_color: '#4f46e5',
+        background_color: '#111827',
         display: 'standalone',
         icons: [
           {
@@ -34,4 +35,9 @@ export default defineConfig({
       }
     })
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });

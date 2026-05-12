@@ -1,5 +1,5 @@
-import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, Suspense, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
@@ -10,9 +10,9 @@ import { supabase } from './lib/supabase';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 
-// Lazy loading pages (Rule #7)
+// Lazy loading pages
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
-const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
+const AppShell = React.lazy(() => import('./pages/AppShell'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -25,7 +25,6 @@ function App() {
   const { setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
-    // Initialize session from Supabase
     const initSession = async () => {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -35,7 +34,6 @@ function App() {
 
     initSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -54,10 +52,9 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
 
-              {/* Protected Routes (Rule #6) */}
+              {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Dashboard />} />
-                {/* Lazy load rute lain seperti POS, Inventory disini */}
+                <Route path="/*" element={<AppShell />} />
               </Route>
 
               {/* Fallback */}
@@ -65,11 +62,11 @@ function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
-        
-        {/* Global Toast Notifications (Rule #4) */}
+
+        {/* Global Toast Notifications */}
         <Toaster position="top-right" richColors />
-        
-        {/* TanStack Query Devtools (Opsional untuk Dev) */}
+
+        {/* TanStack Query Devtools */}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ErrorBoundary>
