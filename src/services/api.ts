@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '@/config';
+import { API_URL, HARDCODED_TOKEN } from '@/config';
 
 // Membuat instance axios dengan konfigurasi dasar
 const api = axios.create({
@@ -15,8 +15,8 @@ const api = axios.create({
 // Anda dapat menambahkan interceptor di sini (misalnya untuk menyisipkan token otomatis)
 api.interceptors.request.use(
   (config) => {
-    // Contoh: Ambil token dari localStorage
-    const token = localStorage.getItem('token');
+    // Gunakan token dari localStorage, atau fallback ke HARDCODED_TOKEN untuk dev
+    const token = localStorage.getItem('token') || HARDCODED_TOKEN;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -40,5 +40,17 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+import type { KanbanOrder, OrderStatus } from '@/types/order';
+
+export const getOrders = async (): Promise<KanbanOrder[]> => {
+  const { data } = await api.get('/orders');
+  return data;
+};
+
+export const updateOrderStatus = async (id: string, status: OrderStatus): Promise<KanbanOrder> => {
+  const { data } = await api.patch(`/orders/${id}/status`, { status });
+  return data;
+};
 
 export default api;

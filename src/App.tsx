@@ -3,7 +3,9 @@ import POSPage from '@/pages/POSPage';
 import CustomersPage from '@/pages/CustomersPage';
 import ProductsPage from '@/pages/ProductsPage';
 import PnLReportPage from '@/pages/PnLReportPage';
-import KanbanCardDetail, { type KanbanOrder } from '@/components/KanbanCardDetail';
+import OrdersPage from '@/pages/OrdersPage';
+import KanbanCardDetail from '@/components/KanbanCardDetail';
+import type { KanbanOrder } from '@/types/order';
 import { ShiftBlocker, CloseShiftModal } from '@/components/ShiftManager';
 import { ExpenseFormModal } from '@/components/ExpenseFormModal';
 import { useShiftStore } from '@/store/shiftStore';
@@ -27,6 +29,7 @@ import {
   CircleDot,
   Wallet,
   LineChart,
+  LayoutDashboard,
 } from 'lucide-react';
 
 // Demo order — simulasikan data dari Supabase / WhatsApp
@@ -59,7 +62,7 @@ const DEMO_ORDER: KanbanOrder = {
 
 function App() {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pos' | 'crm' | 'inventory' | 'finance'>('pos');
+  const [activeTab, setActiveTab] = useState<'pos' | 'orders' | 'crm' | 'inventory' | 'finance'>('pos');
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
 
@@ -100,6 +103,15 @@ function App() {
               title="Kasir POS"
             >
               <Store size={22} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setActiveTab('orders')}
+              className={`rounded-xl h-12 w-12 ${activeTab === 'orders' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+              title="Manajemen Order"
+            >
+              <LayoutDashboard size={22} />
             </Button>
             <Button
               variant="ghost"
@@ -232,6 +244,7 @@ function App() {
         {activeTab === 'crm' && <CustomersPage />}
         {activeTab === 'inventory' && <ProductsPage />}
         {activeTab === 'finance' && <PnLReportPage />}
+        {activeTab === 'orders' && <OrdersPage />}
 
         {/* Dialog detail order */}
         <KanbanCardDetail
