@@ -1,24 +1,23 @@
 import axios from 'axios';
-import { API_URL, HARDCODED_TOKEN } from '@/config';
+import { supabase } from '../lib/supabase';
+import { API_URL } from '@/config';
+import type { KanbanOrder, OrderStatus } from '@/types/order';
 
 // Membuat instance axios dengan konfigurasi dasar
 const api = axios.create({
-  // Mengambil URL dari environment variable (.env)
-  // Vite menggunakan prefix VITE_ agar bisa dibaca di client-side
   baseURL: API_URL,
-  timeout: 10000, // Timeout request setelah 10 detik
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Anda dapat menambahkan interceptor di sini (misalnya untuk menyisipkan token otomatis)
+// Request interceptor: attach Supabase session token automatically
 api.interceptors.request.use(
-  (config) => {
-    // Gunakan token dari localStorage, atau fallback ke HARDCODED_TOKEN untuk dev
-    const token = localStorage.getItem('token') || HARDCODED_TOKEN;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
     }
     return config;
   },
@@ -27,22 +26,22 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor: handle 401 by signing out
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    // Anda bisa menangani error secara global di sini, misal auto logout jika status 401
+  async (error) => {
     if (error.response?.status === 401) {
       console.error('Sesi Anda telah berakhir, silakan login kembali.');
-      // Contoh: window.location.href = '/login';
+      await supabase.auth.signOut();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-import type { KanbanOrder, OrderStatus } from '@/types/order';
-
+// Orders API
 export const getOrders = async (): Promise<KanbanOrder[]> => {
   const { data } = await api.get('/orders');
   return data;
