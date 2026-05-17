@@ -6,6 +6,7 @@ import CustomersPage from '@/pages/CustomersPage';
 import ProductsPage from '@/pages/ProductsPage';
 import PnLReportPage from '@/pages/PnLReportPage';
 import OrdersPage from '@/pages/OrdersPage';
+import TenantManagementPage from '@/pages/TenantManagementPage';
 import KanbanCardDetail from '@/components/KanbanCardDetail';
 import type { KanbanOrder } from '@/types/order';
 import { ShiftBlocker, CloseShiftModal } from '@/components/ShiftManager';
@@ -42,6 +43,7 @@ import {
   DollarSign,
   TrendingDown,
   LogOut,
+  Building,
 } from 'lucide-react';
 
 // Demo order — simulasikan data dari Supabase / WhatsApp
@@ -71,7 +73,7 @@ const DEMO_ORDER: KanbanOrder = {
   },
 };
 
-type TabKey = 'dashboard' | 'pos' | 'orders' | 'crm' | 'inventory' | 'finance';
+type TabKey = 'dashboard' | 'pos' | 'orders' | 'crm' | 'inventory' | 'finance' | 'tenant';
 
 // ─── Dashboard Tab Content (embedded from Dashboard.tsx) ─────────────────────
 function DashboardTab() {
@@ -229,6 +231,7 @@ export default function AppShell() {
     { key: 'crm', icon: <Users size={22} />, title: 'Direktori CRM', activeColor: 'bg-blue-50 text-blue-600' },
     { key: 'inventory', icon: <PackageSearch size={22} />, title: 'Katalog Produk', activeColor: 'bg-indigo-50 text-indigo-600' },
     { key: 'finance', icon: <LineChart size={22} />, title: 'Laporan Keuangan (P&L)', activeColor: 'bg-indigo-50 text-indigo-600' },
+    { key: 'tenant', icon: <Building size={22} />, title: 'Manajemen Tenant', activeColor: 'bg-indigo-50 text-indigo-600' },
   ];
 
   return (
@@ -325,9 +328,9 @@ export default function AppShell() {
 
       {/* ─── Main Content Area ─── */}
       <main className="flex-1 overflow-hidden relative">
-        {/* Action Buttons — pojok kanan atas */}
+        {/* Action Buttons — pojok kanan bawah */}
         {activeShift && (
-          <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
+          <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-3">
             <Button
               onClick={() => setExpenseModalOpen(true)}
               size="sm"
@@ -358,6 +361,7 @@ export default function AppShell() {
         {activeTab === 'crm' && <CustomersPage />}
         {activeTab === 'inventory' && <ProductsPage />}
         {activeTab === 'finance' && <PnLReportPage />}
+        {activeTab === 'tenant' && <TenantManagementPage />}
 
         {/* Dialog detail order */}
         <KanbanCardDetail
