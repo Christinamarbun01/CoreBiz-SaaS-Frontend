@@ -2,13 +2,16 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  closestCenter,
   KeyboardSensor,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,18 +33,26 @@ const COLUMNS: { id: OrderStatus; title: string }[] = [
 
 export function KanbanBoard() {
   const queryClient = useQueryClient();
+  const [orders, setOrders] = useState<KanbanOrder[]>([]);
   const [activeOrder, setActiveOrder] = useState<KanbanOrder | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<KanbanOrder | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // ─── Data Fetching ──────────────────────────────────────────────────────────
-  const { data: orders = [], isLoading } = useQuery({
+  // ─── Sync Local State with Query ────────────────────────────────────────────
+  const { data: fetchedOrders, isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: getOrders,
   });
 
+  useEffect(() => {
+    if (fetchedOrders) {
+      setOrders(fetchedOrders);
+    }
+  }, [fetchedOrders]);
+
+
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) => 
+    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       updateOrderStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -49,6 +60,8 @@ export function KanbanBoard() {
     },
     onError: (error: any) => {
       toast.error(`Gagal memperbarui status: ${error.message}`);
+      // Revert local state to match server state
+      if (fetchedOrders) setOrders(fetchedOrders);
     }
   });
 
@@ -62,7 +75,7 @@ export function KanbanBoard() {
         (payload) => {
           console.log('Realtime change received:', payload);
           queryClient.invalidateQueries({ queryKey: ['orders'] });
-          
+
           if (payload.eventType === 'INSERT') {
             toast.info('Ada pesanan baru masuk!');
           }
@@ -77,9 +90,15 @@ export function KanbanBoard() {
 
   // ─── Drag & Drop Config ─────────────────────────────────────────────────────
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -87,7 +106,17 @@ export function KanbanBoard() {
     })
   );
 
+  const findContainer = (id: string) => {
+    // Check if the id is a column id
+    if (COLUMNS.some(col => col.id === id)) return id as OrderStatus;
+
+    // Find the order with this id and return its status
+    const order = orders.find(o => o.id === id);
+    return order ? order.status : null;
+  };
+
   const ordersByStatus = useMemo(() => {
+
     const map: Record<OrderStatus, KanbanOrder[]> = {
       draft: [],
       processing: [],
@@ -104,43 +133,59 @@ export function KanbanBoard() {
 
   // ─── Event Handlers ─────────────────────────────────────────────────────────
   const handleDragStart = (event: DragStartEvent) => {
-    if (event.active.data.current?.type === 'Order') {
-      setActiveOrder(event.active.data.current.order);
-    }
+    const { active } = event;
+    setActiveOrder(active.data.current?.order || null);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveOrder(null);
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) return;
 
-    const orderId = active.id as string;
-    const overData = over.data.current;
+    const activeId = active.id as string;
+    const overId = over.id as string;
 
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
+    const activeContainer = findContainer(activeId);
+    const overContainer = findContainer(overId);
 
-    let newStatus: OrderStatus | null = null;
-
-    // If dropped over a column
-    if (overData?.type === 'Column') {
-      newStatus = overData.status;
-    } 
-    // If dropped over another card
-    else if (overData?.type === 'Order') {
-      newStatus = overData.order.status;
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+      return;
     }
 
-    if (newStatus && newStatus !== order.status) {
-      // Logic Check: Staf tidak bisa menggeser kartu dari completed kembali ke draft
-      if (order.status === 'completed' && newStatus === 'draft') {
+    setOrders(prev => prev.map(o =>
+      o.id === activeId ? { ...o, status: overContainer } : o
+    ));
+  };
+
+
+
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    const activeOrderData = active.data.current?.order as KanbanOrder | undefined;
+    setActiveOrder(null);
+
+    if (!over || !activeOrderData) {
+      if (fetchedOrders) setOrders(fetchedOrders);
+      return;
+    }
+
+    const overId = over.id as string;
+    const newStatus = findContainer(overId);
+
+    if (newStatus && newStatus !== activeOrderData.status) {
+      if (activeOrderData.status === 'completed' && newStatus === 'draft') {
         toast.error('Pesanan yang sudah selesai tidak bisa dikembalikan ke Draft');
+        if (fetchedOrders) setOrders(fetchedOrders);
         return;
       }
 
-      updateStatusMutation.mutate({ id: orderId, status: newStatus });
+      updateStatusMutation.mutate({ id: active.id as string, status: newStatus });
+    } else {
+      if (fetchedOrders) setOrders(fetchedOrders);
     }
   };
+
+
 
   const handleCardClick = (order: KanbanOrder) => {
     setSelectedOrder(order);
@@ -157,14 +202,15 @@ export function KanbanBoard() {
   }
 
   return (
-    <div className="h-full overflow-x-auto overflow-y-hidden pb-6">
+    <div className="h-full w-full overflow-x-auto overflow-y-hidden">
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-6 h-full px-2">
+        <div className="inline-flex gap-6 h-full min-w-full px-2">
           {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.id}
@@ -176,10 +222,11 @@ export function KanbanBoard() {
           ))}
         </div>
 
+
         <DragOverlay>
           {activeOrder ? (
             <div className="w-[300px]">
-              <KanbanCard order={activeOrder} onClick={() => {}} />
+              <KanbanCard order={activeOrder} onClick={() => { }} />
             </div>
           ) : null}
         </DragOverlay>

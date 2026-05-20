@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Schema untuk data item chart
 export const chartDataItemSchema = z.object({
   date: z.string(),
-  revenue: z.number().or(z.string().transform((val) => parseFloat(val))),
+  revenue: z.coerce.number(),
 });
 
 // Schema input backend (menerima snake_case)

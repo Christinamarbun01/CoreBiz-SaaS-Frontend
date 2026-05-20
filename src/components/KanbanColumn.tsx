@@ -1,4 +1,5 @@
-import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { KanbanOrder, OrderStatus } from '@/types/order';
 import { KanbanCard } from './KanbanCard';
 import { cn } from '@/lib/utils';
@@ -27,7 +28,7 @@ const HEADER_STYLES: Record<OrderStatus, string> = {
 export function KanbanColumn({ status, title, orders, onCardClick }: KanbanColumnProps) {
   const orderIds = orders.map((o) => o.id);
 
-  const { setNodeRef } = useSortable({
+  const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
       type: 'Column',
@@ -36,8 +37,9 @@ export function KanbanColumn({ status, title, orders, onCardClick }: KanbanColum
   });
 
   return (
-    <div className="flex flex-col h-full min-w-[280px] w-full max-w-[350px]">
-      <div className="flex items-center justify-between px-3 py-2.5 mb-3">
+    <div className="flex flex-col h-full min-w-[300px] w-[300px]">
+      <div className="flex items-center justify-between px-2 py-2 mb-2 shrink-0">
+
         <div className="flex items-center gap-2">
           <h3 className={cn("text-xs font-bold uppercase tracking-wider", HEADER_STYLES[status])}>
             {title}
@@ -51,8 +53,9 @@ export function KanbanColumn({ status, title, orders, onCardClick }: KanbanColum
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 p-3 rounded-xl border border-dashed transition-colors flex flex-col gap-3 min-h-[500px]",
-          COLUMN_STYLES[status]
+          "flex-1 p-3 rounded-xl border border-dashed transition-all flex flex-col gap-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent",
+          COLUMN_STYLES[status],
+          isOver && "ring-2 ring-indigo-500/50 border-indigo-400 bg-indigo-50/10 scale-[1.01]"
         )}
       >
         <SortableContext items={orderIds} strategy={verticalListSortingStrategy}>
@@ -60,6 +63,7 @@ export function KanbanColumn({ status, title, orders, onCardClick }: KanbanColum
             <KanbanCard key={order.id} order={order} onClick={onCardClick} />
           ))}
         </SortableContext>
+
         
         {orders.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center opacity-40 grayscale py-10">
