@@ -11,8 +11,8 @@ export const useAuth = () => {
 
   const loginMutation = useMutation({
     mutationFn: authService.login,
-    onSuccess: (data) => {
-      setUser(data.user);
+    onSuccess: async (data) => {
+      await setUser(data.user);
       toast.success('Login berhasil!');
       navigate('/');
     },

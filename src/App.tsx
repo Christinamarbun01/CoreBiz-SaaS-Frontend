@@ -10,9 +10,8 @@ import { supabase } from './lib/supabase';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 
-// Lazy loading pages
-const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
-const AppShell = React.lazy(() => import('./pages/AppShell'));
+import { Login } from './pages/Login';
+import AppShell from './pages/AppShell';
 
 // Loading Fallback
 const PageLoader = () => (
@@ -22,20 +21,33 @@ const PageLoader = () => (
 );
 
 function App() {
-  const { setUser, setLoading } = useAuthStore();
+  const setUser = useAuthStore(state => state.setUser);
+  const setLoading = useAuthStore(state => state.setLoading);
 
   useEffect(() => {
     const initSession = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        setLoading(true);
+        
+        // Timeout 3 detik untuk getSession
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout inisialisasi session')), 3000)
+        );
+        
+        const sessionPromise = supabase.auth.getSession();
+        
+        const { data: { session } } = (await Promise.race([sessionPromise, timeoutPromise])) as any;
+        await setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Failed to initialize session:', error);
+        await setUser(null);
+      }
     };
 
     initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await setUser(session?.user ?? null);
     });
 
     return () => {

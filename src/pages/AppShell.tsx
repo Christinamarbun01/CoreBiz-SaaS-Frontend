@@ -7,6 +7,7 @@ import ProductsPage from '@/pages/ProductsPage';
 import PnLReportPage from '@/pages/PnLReportPage';
 import OrdersPage from '@/pages/OrdersPage';
 import TenantManagementPage from '@/pages/TenantManagementPage';
+import UserManagementPage from '@/pages/UserManagementPage';
 import KanbanCardDetail from '@/components/KanbanCardDetail';
 import type { KanbanOrder } from '@/types/order';
 import { ShiftBlocker, CloseShiftModal } from '@/components/ShiftManager';
@@ -44,6 +45,7 @@ import {
   TrendingDown,
   LogOut,
   Building,
+  UserCog,
 } from 'lucide-react';
 
 // Demo order — simulasikan data dari Supabase / WhatsApp
@@ -73,7 +75,7 @@ const DEMO_ORDER: KanbanOrder = {
   },
 };
 
-type TabKey = 'dashboard' | 'pos' | 'orders' | 'crm' | 'inventory' | 'finance' | 'tenant';
+type TabKey = 'dashboard' | 'pos' | 'orders' | 'crm' | 'inventory' | 'finance' | 'tenant' | 'users';
 
 // ─── Dashboard Tab Content (embedded from Dashboard.tsx) ─────────────────────
 function DashboardTab() {
@@ -229,6 +231,7 @@ export default function AppShell() {
     { key: 'pos', icon: <Store size={22} />, title: 'Kasir POS', activeColor: 'bg-slate-100 text-slate-900' },
     { key: 'orders', icon: <BarChart3 size={22} />, title: 'Manajemen Order', activeColor: 'bg-indigo-50 text-indigo-600' },
     { key: 'crm', icon: <Users size={22} />, title: 'Direktori CRM', activeColor: 'bg-blue-50 text-blue-600' },
+    { key: 'users', icon: <UserCog size={22} />, title: 'Manajemen Pengguna', activeColor: 'bg-amber-50 text-amber-600' },
     { key: 'inventory', icon: <PackageSearch size={22} />, title: 'Katalog Produk', activeColor: 'bg-indigo-50 text-indigo-600' },
     { key: 'finance', icon: <LineChart size={22} />, title: 'Laporan Keuangan (P&L)', activeColor: 'bg-indigo-50 text-indigo-600' },
     { key: 'tenant', icon: <Building size={22} />, title: 'Manajemen Tenant', activeColor: 'bg-indigo-50 text-indigo-600' },
@@ -359,6 +362,7 @@ export default function AppShell() {
 
         {activeTab === 'orders' && <OrdersPage />}
         {activeTab === 'crm' && <CustomersPage />}
+        {activeTab === 'users' && <UserManagementPage />}
         {activeTab === 'inventory' && <ProductsPage />}
         {activeTab === 'finance' && <PnLReportPage />}
         {activeTab === 'tenant' && <TenantManagementPage />}
